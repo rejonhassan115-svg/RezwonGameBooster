@@ -1,0 +1,1484 @@
+name: Build REZWON APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Gradle 8.11.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Generate Project Files
+        run: |
+          mkdir -p app/src/main/java/com/rezwon/gamebooster
+          mkdir -p app/src/main/res/layout
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/drawable
+          mkdir -p app/src/main/res/mipmap-anydpi-v26
+
+          cat << 'EOF' > gradle.properties
+          org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.nonTransitiveRClass=true
+          EOF
+
+          cat << 'EOF' > settings.gradle.kts
+          pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+          dependencyResolutionManagement {
+              repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+              repositories {
+                  google()
+                  mavenCentral()
+              }
+          }
+          rootProject.name = "RezwonGameBooster"
+          include(":app")
+          EOF
+
+          cat << 'EOF' > build.gradle.kts
+          plugins {
+              id("com.android.application") version "8.9.1" apply false
+              id("org.jetbrains.kotlin.android") version "2.1.10" apply false
+          }
+          EOF
+
+          cat << 'EOF' > app/proguard-rules.pro
+          # ProGuard rules
+          EOF
+
+          cat << 'EOF' > app/build.gradle.kts
+          plugins {
+              id("com.android.application")
+              id("org.jetbrains.kotlin.android")
+          }
+
+          android {
+              namespace = "com.rezwon.gamebooster"
+              compileSdk = 36
+
+              defaultConfig {
+                  applicationId = "com.rezwon.gamebooster"
+                  minSdk = 24
+                  targetSdk = 36
+                  versionCode = 1
+                  versionName = "1.0.0"
+              }
+
+              buildTypes {
+                  release {
+                      isMinifyEnabled = true
+                      isShrinkResources = true
+                      proguardFiles(
+                          getDefaultProguardFile("proguard-android-optimize.txt"),
+                          "proguard-rules.pro"
+                      )
+                  }
+                  debug {
+                      isMinifyEnabled = false
+                  }
+              }
+
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+
+              kotlinOptions {
+                  jvmTarget = "17"
+              }
+
+              buildFeatures {
+                  viewBinding = true
+              }
+          }
+
+          dependencies {
+              implementation("androidx.core:core-ktx:1.15.0")
+              implementation("androidx.appcompat:appcompat:1.7.0")
+              implementation("com.google.android.material:material:1.12.0")
+              implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+              implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+              implementation("androidx.core:core-splashscreen:1.0.1")
+              implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
+              implementation("com.google.android.gms:play-services-ads:25.5.0")
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/AndroidManifest.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+              <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+              <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
+              <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+              <queries>
+                  <package android:name="com.dts.freefireth" />
+                  <package android:name="com.dts.freefiremax" />
+              </queries>
+
+              <application
+                  android:name=".RezwonApp"
+                  android:allowBackup="true"
+                  android:icon="@mipmap/ic_launcher"
+                  android:roundIcon="@mipmap/ic_launcher_round"
+                  android:label="@string/app_name"
+                  android:supportsRtl="true"
+                  android:theme="@style/Theme.Rezwon.Splash">
+
+                  <meta-data
+                      android:name="com.google.android.gms.ads.APPLICATION_ID"
+                      android:value="@string/admob_app_id" />
+
+                  <activity
+                      android:name=".MainActivity"
+                      android:exported="true"
+                      android:screenOrientation="portrait">
+                      <intent-filter>
+                          <action android:name="android.intent.action.MAIN" />
+                          <category android:name="android.intent.category.LAUNCHER" />
+                      </intent-filter>
+                  </activity>
+              </application>
+
+          </manifest>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/values/colors.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <color name="bg_black">#040608</color>
+              <color name="bg_surface">#0C1117</color>
+              <color name="bg_surface_elevated">#121A23</color>
+              <color name="border_subtle">#1C3426</color>
+              <color name="neon_green">#00FF66</color>
+              <color name="neon_green_bright">#39FF14</color>
+              <color name="neon_green_dark">#009940</color>
+              <color name="neon_green_tint">#1A00FF66</color>
+              <color name="amber_warn">#FFB020</color>
+              <color name="red_hot">#FF3B5C</color>
+              <color name="cyan_net">#00E5FF</color>
+              <color name="text_primary">#F2F7F4</color>
+              <color name="text_secondary">#8EA397</color>
+              <color name="text_muted">#5B7064</color>
+          </resources>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/values/strings.xml
+          <resources>
+              <string name="app_name">REZWON GAME BOOSTER</string>
+              <string name="admob_app_id">ca-app-pub-3940256099942544~3347511713</string>
+              <string name="admob_banner_id">ca-app-pub-3940256099942544/9214589741</string>
+              <string name="admob_interstitial_id">ca-app-pub-3940256099942544/1033173712</string>
+          </resources>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/values/themes.xml
+          <resources>
+              <style name="Theme.Rezwon" parent="Theme.Material3.Dark.NoActionBar">
+                  <item name="colorPrimary">@color/neon_green</item>
+                  <item name="colorOnPrimary">@color/bg_black</item>
+                  <item name="colorSurface">@color/bg_surface</item>
+                  <item name="android:colorBackground">@color/bg_black</item>
+                  <item name="android:statusBarColor">@color/bg_black</item>
+                  <item name="android:navigationBarColor">@color/bg_black</item>
+                  <item name="android:windowLightStatusBar">false</item>
+              </style>
+
+              <style name="Theme.Rezwon.Splash" parent="Theme.SplashScreen">
+                  <item name="windowSplashScreenBackground">@color/bg_black</item>
+                  <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+                  <item name="postSplashScreenTheme">@style/Theme.Rezwon</item>
+              </style>
+          </resources>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_cyber_card.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="@color/bg_surface" />
+              <stroke android:width="1dp" android:color="@color/border_subtle" />
+              <corners android:radius="18dp" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_neon_pill.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <solid android:color="@color/neon_green_tint" />
+              <stroke android:width="1dp" android:color="#6600FF66" />
+              <corners android:radius="100dp" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_boost_ring_outer.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+              <solid android:color="@android:color/transparent" />
+              <stroke
+                  android:width="3dp"
+                  android:color="@color/neon_green"
+                  android:dashWidth="18dp"
+                  android:dashGap="8dp" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_boost_button.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+              <gradient
+                  android:type="radial"
+                  android:gradientRadius="120dp"
+                  android:startColor="#173826"
+                  android:endColor="#08130D" />
+              <stroke
+                  android:width="2.5dp"
+                  android:color="@color/neon_green" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/bg_freefire_card.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+              <gradient
+                  android:angle="0"
+                  android:startColor="#0E1D15"
+                  android:endColor="#0A0F14" />
+              <stroke android:width="1.2dp" android:color="@color/neon_green" />
+              <corners android:radius="18dp" />
+          </shape>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_bolt.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="@color/neon_green"
+                  android:pathData="M13,2L4,14h7l-1,8 9,-12h-7l1,-8z" />
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_gamepad.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="24dp"
+              android:height="24dp"
+              android:viewportWidth="24"
+              android:viewportHeight="24">
+              <path
+                  android:fillColor="@color/neon_green"
+                  android:pathData="M17.5,6.5C19.99,6.5 22,8.51 22,11v4c0,1.93 -1.57,3.5 -3.5,3.5 -1.16,0 -2.23,-0.58 -2.87,-1.54L14.5,15.27H9.5l-1.13,1.69C7.73,17.92 6.66,18.5 5.5,18.5 3.57,18.5 2,16.93 2,15v-4C2,8.51 4.01,6.5 6.5,6.5h11zM8,10H6.5v1.5H5V13h1.5v1.5H8V13h1.5v-1.5H8V10zM15.5,11a1,1 0,1 0,0 2 1,1 0,0 0,0 -2zM18,13a1,1 0,1 0,0 2 1,1 0,0 0,0 -2z" />
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_background.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path android:fillColor="#040608" android:pathData="M0,0h108v108h-108z" />
+              <path android:strokeWidth="1" android:strokeColor="#143D24" android:pathData="M16,54 A38,38 0 1,0 92,54 A38,38 0 1,0 16,54 Z" />
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/drawable/ic_launcher_foreground.xml
+          <vector xmlns:android="http://schemas.android.com/apk/res/android"
+              android:width="108dp"
+              android:height="108dp"
+              android:viewportWidth="108"
+              android:viewportHeight="108">
+              <path
+                  android:fillColor="#0F261A"
+                  android:strokeWidth="2.5"
+                  android:strokeColor="#00FF66"
+                  android:pathData="M54,24 L78,34 V53 C78,68 67.5,80.5 54,85 C40.5,80.5 30,68 30,53 V34 Z" />
+              <path
+                  android:fillColor="#00FF66"
+                  android:pathData="M57,34 L42,56 H53 L50,74 L66,51 H55 Z" />
+          </vector>
+          EOF
+
+          cat << 'EOF' > app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+              <background android:drawable="@drawable/ic_launcher_background" />
+              <foreground android:drawable="@drawable/ic_launcher_foreground" />
+          </adaptive-icon>
+          EOF
+
+          cp app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml
+
+          cat << 'EOF' > app/src/main/res/layout/activity_main.xml
+          <?xml version="1.0" encoding="utf-8"?>
+          <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/rootLayout"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:background="@color/bg_black">
+
+              <androidx.core.widget.NestedScrollView
+                  android:id="@+id/scrollView"
+                  android:layout_width="0dp"
+                  android:layout_height="0dp"
+                  android:clipToPadding="false"
+                  android:paddingBottom="16dp"
+                  app:layout_constraintBottom_toTopOf="@id/adBannerContainer"
+                  app:layout_constraintEnd_toEndOf="parent"
+                  app:layout_constraintStart_toStartOf="parent"
+                  app:layout_constraintTop_toTopOf="parent">
+
+                  <LinearLayout
+                      android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:orientation="vertical"
+                      android:paddingHorizontal="16dp"
+                      android:paddingTop="14dp">
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:gravity="center_vertical"
+                          android:orientation="horizontal">
+
+                          <ImageView
+                              android:layout_width="28dp"
+                              android:layout_height="28dp"
+                              android:contentDescription="@string/app_name"
+                              android:src="@drawable/ic_bolt" />
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginStart="10dp"
+                              android:layout_weight="1"
+                              android:orientation="vertical">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:letterSpacing="0.06"
+                                  android:text="REZWON GAME BOOSTER"
+                                  android:textColor="@color/text_primary"
+                                  android:textSize="17sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvDeviceHeader"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="Detecting device..."
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="12sp" />
+                          </LinearLayout>
+
+                          <TextView
+                              android:id="@+id/tvSafeBadge"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:background="@drawable/bg_neon_pill"
+                              android:paddingHorizontal="10dp"
+                              android:paddingVertical="5dp"
+                              android:text="NO ROOT • SAFE"
+                              android:textColor="@color/neon_green"
+                              android:textSize="10sp"
+                              android:textStyle="bold" />
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="16dp"
+                          android:background="@drawable/bg_cyber_card"
+                          android:gravity="center_horizontal"
+                          android:orientation="vertical"
+                          android:padding="20dp">
+
+                          <FrameLayout
+                              android:layout_width="176dp"
+                              android:layout_height="176dp">
+
+                              <View
+                                  android:id="@+id/ringOuter"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="match_parent"
+                                  android:background="@drawable/bg_boost_ring_outer" />
+
+                              <LinearLayout
+                                  android:id="@+id/btnBoost"
+                                  android:layout_width="142dp"
+                                  android:layout_height="142dp"
+                                  android:layout_gravity="center"
+                                  android:background="@drawable/bg_boost_button"
+                                  android:clickable="true"
+                                  android:focusable="true"
+                                  android:foreground="?attr/selectableItemBackgroundBorderless"
+                                  android:gravity="center"
+                                  android:orientation="vertical">
+
+                                  <ImageView
+                                      android:id="@+id/ivBoostIcon"
+                                      android:layout_width="34dp"
+                                      android:layout_height="34dp"
+                                      android:contentDescription="Boost"
+                                      android:src="@drawable/ic_bolt" />
+
+                                  <TextView
+                                      android:id="@+id/tvBoostButton"
+                                      android:layout_width="wrap_content"
+                                      android:layout_height="wrap_content"
+                                      android:layout_marginTop="6dp"
+                                      android:letterSpacing="0.08"
+                                      android:text="ONE-TAP\nBOOST"
+                                      android:textAlignment="center"
+                                      android:textColor="@color/text_primary"
+                                      android:textSize="14sp"
+                                      android:textStyle="bold" />
+                              </LinearLayout>
+                          </FrameLayout>
+
+                          <TextView
+                              android:id="@+id/tvBoostStatus"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:layout_marginTop="14dp"
+                              android:text="Ready for safe optimization • Cache trim, Display 120Hz &amp; Gaming Mode"
+                              android:textAlignment="center"
+                              android:textColor="@color/text_secondary"
+                              android:textSize="12sp" />
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="12dp"
+                          android:orientation="horizontal">
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginEnd="6dp"
+                              android:layout_weight="1"
+                              android:background="@drawable/bg_cyber_card"
+                              android:orientation="vertical"
+                              android:padding="14dp">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="RAM USAGE"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvRamPercent"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="4dp"
+                                  android:text="--%"
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="22sp"
+                                  android:textStyle="bold" />
+
+                              <ProgressBar
+                                  android:id="@+id/progressRam"
+                                  style="?android:attr/progressBarStyleHorizontal"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="6dp"
+                                  android:layout_marginTop="8dp"
+                                  android:max="100"
+                                  android:progress="0"
+                                  android:progressBackgroundTint="#1E2C24"
+                                  android:progressTint="@color/neon_green" />
+
+                              <TextView
+                                  android:id="@+id/tvRamDetail"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="6dp"
+                                  android:text="-- / -- GB"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp" />
+                          </LinearLayout>
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginStart="6dp"
+                              android:layout_weight="1"
+                              android:background="@drawable/bg_cyber_card"
+                              android:orientation="vertical"
+                              android:padding="14dp">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="CPU &amp; DISPLAY"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvFpsValue"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="4dp"
+                                  android:text="-- FPS"
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="22sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvCpuCores"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="6dp"
+                                  android:text="-- Cores"
+                                  android:textColor="@color/text_primary"
+                                  android:textSize="12sp" />
+
+                              <TextView
+                                  android:id="@+id/tvCpuFreq"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="2dp"
+                                  android:text="Clock: --"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp" />
+                          </LinearLayout>
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="12dp"
+                          android:orientation="horizontal">
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginEnd="6dp"
+                              android:layout_weight="1"
+                              android:background="@drawable/bg_cyber_card"
+                              android:orientation="vertical"
+                              android:padding="14dp">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="BATTERY TEMP"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvBatteryTemp"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="4dp"
+                                  android:text="-- °C"
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="22sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvBatteryDetail"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="8dp"
+                                  android:text="Level: --%"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp" />
+                          </LinearLayout>
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginStart="6dp"
+                              android:layout_weight="1"
+                              android:background="@drawable/bg_cyber_card"
+                              android:orientation="vertical"
+                              android:padding="14dp">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="STORAGE"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvStorageFree"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="4dp"
+                                  android:text="-- GB Free"
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="20sp"
+                                  android:textStyle="bold" />
+
+                              <ProgressBar
+                                  android:id="@+id/progressStorage"
+                                  style="?android:attr/progressBarStyleHorizontal"
+                                  android:layout_width="match_parent"
+                                  android:layout_height="6dp"
+                                  android:layout_marginTop="8dp"
+                                  android:max="100"
+                                  android:progress="0"
+                                  android:progressBackgroundTint="#1E2C24"
+                                  android:progressTint="@color/neon_green" />
+
+                              <TextView
+                                  android:id="@+id/tvStorageDetail"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="6dp"
+                                  android:text="-- / -- GB used"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp" />
+                          </LinearLayout>
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="12dp"
+                          android:background="@drawable/bg_cyber_card"
+                          android:gravity="center_vertical"
+                          android:orientation="horizontal"
+                          android:padding="14dp">
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_weight="1"
+                              android:orientation="vertical">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="NETWORK MONITOR"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="11sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvNetworkStatus"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="4dp"
+                                  android:text="Checking connection..."
+                                  android:textColor="@color/text_primary"
+                                  android:textSize="15sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvNetworkDetail"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="2dp"
+                                  android:text="Est. Speed: --"
+                                  android:textColor="@color/text_secondary"
+                                  android:textSize="12sp" />
+                          </LinearLayout>
+
+                          <TextView
+                              android:id="@+id/tvPingBadge"
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:background="@drawable/bg_neon_pill"
+                              android:paddingHorizontal="12dp"
+                              android:paddingVertical="8dp"
+                              android:text="-- ms"
+                              android:textColor="@color/neon_green"
+                              android:textSize="14sp"
+                              android:textStyle="bold" />
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="12dp"
+                          android:background="@drawable/bg_cyber_card"
+                          android:orientation="vertical"
+                          android:padding="14dp">
+
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:text="GAMING MODE"
+                              android:textColor="@color/neon_green"
+                              android:textSize="12sp"
+                              android:textStyle="bold" />
+
+                          <com.google.android.material.switchmaterial.SwitchMaterial
+                              android:id="@+id/switchGamingMode"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:layout_marginTop="6dp"
+                              android:text="Enable Focus Shield (DND + Keep Awake)"
+                              android:textColor="@color/text_primary"
+                              android:textSize="13sp"
+                              app:thumbTint="@color/neon_green"
+                              app:trackTint="#224532" />
+
+                          <com.google.android.material.switchmaterial.SwitchMaterial
+                              android:id="@+id/switch120Hz"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:checked="true"
+                              android:text="Prefer Max Refresh Rate (120Hz AMOLED)"
+                              android:textColor="@color/text_primary"
+                              android:textSize="13sp"
+                              app:thumbTint="@color/neon_green"
+                              app:trackTint="#224532" />
+
+                          <com.google.android.material.switchmaterial.SwitchMaterial
+                              android:id="@+id/switchBrightness"
+                              android:layout_width="match_parent"
+                              android:layout_height="wrap_content"
+                              android:text="High Visibility Brightness Preset"
+                              android:textColor="@color/text_primary"
+                              android:textSize="13sp"
+                              app:thumbTint="@color/neon_green"
+                              app:trackTint="#224532" />
+                      </LinearLayout>
+
+                      <LinearLayout
+                          android:id="@+id/cardFreeFireLaunch"
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="12dp"
+                          android:background="@drawable/bg_freefire_card"
+                          android:clickable="true"
+                          android:focusable="true"
+                          android:foreground="?attr/selectableItemBackground"
+                          android:gravity="center_vertical"
+                          android:orientation="horizontal"
+                          android:padding="16dp">
+
+                          <ImageView
+                              android:layout_width="34dp"
+                              android:layout_height="34dp"
+                              android:contentDescription="Free Fire Quick Launch"
+                              android:src="@drawable/ic_gamepad" />
+
+                          <LinearLayout
+                              android:layout_width="0dp"
+                              android:layout_height="wrap_content"
+                              android:layout_marginStart="12dp"
+                              android:layout_weight="1"
+                              android:orientation="vertical">
+
+                              <TextView
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:text="FREE FIRE QUICK LAUNCH"
+                                  android:textColor="@color/text_primary"
+                                  android:textSize="14sp"
+                                  android:textStyle="bold" />
+
+                              <TextView
+                                  android:id="@+id/tvFreeFireStatus"
+                                  android:layout_width="wrap_content"
+                                  android:layout_height="wrap_content"
+                                  android:layout_marginTop="2dp"
+                                  android:text="Boost &amp; launch official game safely"
+                                  android:textColor="@color/neon_green"
+                                  android:textSize="12sp" />
+                          </LinearLayout>
+
+                          <TextView
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:background="@drawable/bg_neon_pill"
+                              android:paddingHorizontal="12dp"
+                              android:paddingVertical="7dp"
+                              android:text="PLAY"
+                              android:textColor="@color/neon_green"
+                              android:textSize="12sp"
+                              android:textStyle="bold" />
+                      </LinearLayout>
+
+                      <TextView
+                          android:layout_width="match_parent"
+                          android:layout_height="wrap_content"
+                          android:layout_marginTop="14dp"
+                          android:text="REZWON GAME BOOSTER optimizes safely using standard Android APIs. No root, no game file changes, and no anti-cheat interference."
+                          android:textAlignment="center"
+                          android:textColor="@color/text_muted"
+                          android:textSize="11sp" />
+
+                  </LinearLayout>
+              </androidx.core.widget.NestedScrollView>
+
+              <FrameLayout
+                  android:id="@+id/adBannerContainer"
+                  android:layout_width="0dp"
+                  android:layout_height="wrap_content"
+                  android:background="@color/bg_black"
+                  android:minHeight="52dp"
+                  app:layout_constraintBottom_toBottomOf="parent"
+                  app:layout_constraintEnd_toEndOf="parent"
+                  app:layout_constraintStart_toStartOf="parent" />
+
+          </androidx.constraintlayout.widget.ConstraintLayout>
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/rezwon/gamebooster/RezwonApp.kt
+          package com.rezwon.gamebooster
+
+          import android.app.Application
+          import com.google.android.gms.ads.MobileAds
+          import kotlinx.coroutines.CoroutineScope
+          import kotlinx.coroutines.Dispatchers
+          import kotlinx.coroutines.launch
+
+          class RezwonApp : Application() {
+              override fun onCreate() {
+                  super.onCreate()
+                  CoroutineScope(Dispatchers.IO).launch {
+                      MobileAds.initialize(this@RezwonApp)
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/rezwon/gamebooster/SystemMonitor.kt
+          package com.rezwon.gamebooster
+
+          import android.app.ActivityManager
+          import android.content.Context
+          import android.content.Intent
+          import android.net.ConnectivityManager
+          import android.net.NetworkCapabilities
+          import android.os.BatteryManager
+          import android.os.Build
+          import android.os.Environment
+          import android.os.StatFs
+          import android.os.SystemClock
+          import android.view.WindowManager
+          import kotlinx.coroutines.Dispatchers
+          import kotlinx.coroutines.withContext
+          import java.io.File
+          import java.net.InetSocketAddress
+          import java.net.Socket
+          import kotlin.math.roundToInt
+
+          data class MemorySnapshot(val totalGb: Double, val usedGb: Double, val availGb: Double, val usedPercent: Int)
+          data class StorageSnapshot(val totalGb: Double, val usedGb: Double, val freeGb: Double, val usedPercent: Int)
+          data class BatterySnapshot(val tempCelsius: Float?, val levelPercent: Int, val isCharging: Boolean, val thermalStatus: String)
+          data class CpuSnapshot(val deviceLabel: String, val cores: Int, val currentFreqMhz: Int?, val maxFreqMhz: Int?, val maxRefreshHz: Int)
+          data class NetworkSnapshot(val isConnected: Boolean, val transportLabel: String, val downMbps: Double, val pingMs: Int?)
+
+          object SystemMonitor {
+
+              fun getMemorySnapshot(context: Context): MemorySnapshot {
+                  val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                  val memInfo = ActivityManager.MemoryInfo()
+                  am.getMemoryInfo(memInfo)
+                  val totalBytes = memInfo.totalMem.coerceAtLeast(1L)
+                  val availBytes = memInfo.availMem.coerceIn(0L, totalBytes)
+                  val usedBytes = totalBytes - availBytes
+                  val gbFactor = 1024.0 * 1024.0 * 1024.0
+                  val percent = ((usedBytes * 100.0) / totalBytes).roundToInt().coerceIn(0, 100)
+                  return MemorySnapshot(totalBytes / gbFactor, usedBytes / gbFactor, availBytes / gbFactor, percent)
+              }
+
+              fun getStorageSnapshot(): StorageSnapshot {
+                  return try {
+                      val stat = StatFs(Environment.getDataDirectory().path)
+                      val blockSize = stat.blockSizeLong
+                      val totalBytes = (stat.blockCountLong * blockSize).coerceAtLeast(1L)
+                      val freeBytes = (stat.availableBlocksLong * blockSize).coerceIn(0L, totalBytes)
+                      val usedBytes = totalBytes - freeBytes
+                      val gbFactor = 1024.0 * 1024.0 * 1024.0
+                      val percent = ((usedBytes * 100.0) / totalBytes).roundToInt().coerceIn(0, 100)
+                      StorageSnapshot(totalBytes / gbFactor, usedBytes / gbFactor, freeBytes / gbFactor, percent)
+                  } catch (_: Exception) {
+                      StorageSnapshot(0.0, 0.0, 0.0, 0)
+                  }
+              }
+
+              fun parseBatteryIntent(intent: Intent?): BatterySnapshot {
+                  if (intent == null) return BatterySnapshot(null, 0, false, "UNKNOWN")
+                  val rawTemp = intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
+                  val tempC = if (rawTemp > 0) rawTemp / 10f else null
+                  val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                  val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, 100).coerceAtLeast(1)
+                  val percent = if (level >= 0) ((level * 100f) / scale).roundToInt() else 0
+                  val status = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                  val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+                  val thermalStatus = when {
+                      tempC == null -> "N/A"
+                      tempC >= 43f -> "HOT"
+                      tempC >= 38f -> "WARM"
+                      else -> "COOL"
+                  }
+                  return BatterySnapshot(tempC, percent, isCharging, thermalStatus)
+              }
+
+              fun getCpuSnapshot(context: Context): CpuSnapshot {
+                  val manufacturer = Build.MANUFACTURER.uppercase()
+                  val model = Build.MODEL
+                  val deviceLabel = if (model.uppercase().startsWith(manufacturer)) model else "$manufacturer $model"
+                  val cores = Runtime.getRuntime().availableProcessors()
+                  val curMhz = readCpuFreqMhz("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq")
+                  val maxMhz = readCpuFreqMhz("/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq")
+                  val refreshHz = getMaxSupportedRefreshHz(context)
+                  return CpuSnapshot(deviceLabel, cores, curMhz, maxMhz, refreshHz)
+              }
+
+              private fun readCpuFreqMhz(path: String): Int? {
+                  return try {
+                      val file = File(path)
+                      if (!file.canRead()) return null
+                      val khz = file.readText().trim().toLongOrNull() ?: return null
+                      (khz / 1000L).toInt()
+                  } catch (_: Exception) {
+                      null
+                  }
+              }
+
+              fun getMaxSupportedRefreshHz(context: Context): Int {
+                  return try {
+                      val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                          context.display
+                      } else {
+                          @Suppress("DEPRECATION")
+                          (context.getSystemService(Context.WINDOW_SERVICE) as WindowManager).defaultDisplay
+                      }
+                      val modes = display?.supportedModes
+                      val maxRate = modes?.maxOfOrNull { it.refreshRate } ?: display?.refreshRate ?: 60f
+                      maxRate.roundToInt()
+                  } catch (_: Exception) {
+                      60
+                  }
+              }
+
+              suspend fun getNetworkSnapshot(context: Context): NetworkSnapshot {
+                  val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+                  val caps = cm.getNetworkCapabilities(cm.activeNetwork)
+                  if (caps == null || !caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
+                      return NetworkSnapshot(false, "Offline", 0.0, null)
+                  }
+                  val transport = when {
+                      caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> "Wi-Fi Connected"
+                      caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> "Mobile Data (4G/5G)"
+                      caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> "Ethernet"
+                      else -> "Connected"
+                  }
+                  val downMbps = caps.linkDownstreamBandwidthKbps / 1000.0
+                  val pingMs = measureTcpPingMs()
+                  return NetworkSnapshot(true, transport, downMbps, pingMs)
+              }
+
+              private suspend fun measureTcpPingMs(): Int? = withContext(Dispatchers.IO) {
+                  try {
+                      Socket().use { socket ->
+                          val start = SystemClock.elapsedRealtime()
+                          socket.connect(InetSocketAddress("1.1.1.1", 443), 1500)
+                          (SystemClock.elapsedRealtime() - start).toInt()
+                      }
+                  } catch (_: Exception) {
+                      null
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/rezwon/gamebooster/OptimizationEngine.kt
+          package com.rezwon.gamebooster
+
+          import android.app.Activity
+          import android.app.NotificationManager
+          import android.content.Context
+          import android.content.Intent
+          import android.net.Uri
+          import android.os.Build
+          import android.provider.Settings
+          import android.view.WindowManager
+          import kotlinx.coroutines.Dispatchers
+          import kotlinx.coroutines.delay
+          import kotlinx.coroutines.withContext
+          import java.io.File
+
+          data class BoostReport(val reclaimedMb: Int, val clearedCacheKb: Long, val summary: String)
+          enum class DndStatus { ENABLED, DISABLED, NEEDS_PERMISSION }
+          sealed class FreeFireTarget {
+              data class Installed(val label: String, val packageName: String) : FreeFireTarget()
+              data object NotInstalled : FreeFireTarget()
+          }
+
+          object OptimizationEngine {
+              private const val PKG_FREE_FIRE = "com.dts.freefireth"
+              private const val PKG_FREE_FIRE_MAX = "com.dts.freefiremax"
+
+              suspend fun runSafeOptimization(context: Context): BoostReport = withContext(Dispatchers.IO) {
+                  val beforeAvail = SystemMonitor.getMemorySnapshot(context).availGb
+                  val clearedBytes = deleteCacheContents(context.cacheDir) + deleteCacheContents(context.codeCacheDir)
+                  Runtime.getRuntime().gc()
+                  delay(850)
+                  val afterAvail = SystemMonitor.getMemorySnapshot(context).availGb
+                  val reclaimedMb = ((afterAvail - beforeAvail) * 1024.0).toInt().coerceAtLeast(0)
+                  val clearedKb = (clearedBytes / 1024L).coerceAtLeast(0L)
+                  val summary = if (reclaimedMb > 0) {
+                      "Safe Boost complete • +$reclaimedMb MB available • Cache trimmed (${clearedKb} KB)"
+                  } else {
+                      "Safe Boost complete • Cache trimmed (${clearedKb} KB) & Display/Gaming profile active"
+                  }
+                  BoostReport(reclaimedMb, clearedKb, summary)
+              }
+
+              private fun deleteCacheContents(dir: File?): Long {
+                  if (dir == null || !dir.exists()) return 0L
+                  var freed = 0L
+                  dir.listFiles()?.forEach { child ->
+                      freed += if (child.isDirectory) {
+                          deleteCacheContents(child).also { child.delete() }
+                      } else {
+                          val len = child.length()
+                          if (child.delete()) len else 0L
+                      }
+                  }
+                  return freed
+              }
+
+              fun applyHighRefreshRate(activity: Activity, enable: Boolean) {
+                  try {
+                      val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                          activity.display
+                      } else {
+                          @Suppress("DEPRECATION")
+                          activity.windowManager.defaultDisplay
+                      } ?: return
+                      val currentMode = display.mode
+                      val bestMode = display.supportedModes
+                          .filter { it.physicalWidth == currentMode.physicalWidth && it.physicalHeight == currentMode.physicalHeight }
+                          .maxByOrNull { it.refreshRate }
+                      val params = activity.window.attributes
+                      params.preferredDisplayModeId = if (enable && bestMode != null) bestMode.modeId else 0
+                      activity.window.attributes = params
+                  } catch (_: Exception) { }
+              }
+
+              fun applyHighBrightness(activity: Activity, enable: Boolean) {
+                  val params = activity.window.attributes
+                  params.screenBrightness = if (enable) 0.90f else WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                  activity.window.attributes = params
+              }
+
+              fun applyKeepScreenOn(activity: Activity, enable: Boolean) {
+                  if (enable) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                  else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+              }
+
+              fun setGamingDnd(context: Context, enable: Boolean): DndStatus {
+                  val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                  if (!nm.isNotificationPolicyAccessGranted) return DndStatus.NEEDS_PERMISSION
+                  return try {
+                      nm.setInterruptionFilter(
+                          if (enable) NotificationManager.INTERRUPTION_FILTER_PRIORITY
+                          else NotificationManager.INTERRUPTION_FILTER_ALL
+                      )
+                      if (enable) DndStatus.ENABLED else DndStatus.DISABLED
+                  } catch (_: SecurityException) {
+                      DndStatus.NEEDS_PERMISSION
+                  }
+              }
+
+              fun openDndSettings(context: Context) {
+                  val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS).apply {
+                      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                  }
+                  context.startActivity(intent)
+              }
+
+              fun detectFreeFire(context: Context): FreeFireTarget {
+                  val pm = context.packageManager
+                  if (pm.getLaunchIntentForPackage(PKG_FREE_FIRE_MAX) != null) {
+                      return FreeFireTarget.Installed("Free Fire MAX", PKG_FREE_FIRE_MAX)
+                  }
+                  if (pm.getLaunchIntentForPackage(PKG_FREE_FIRE) != null) {
+                      return FreeFireTarget.Installed("Free Fire", PKG_FREE_FIRE)
+                  }
+                  return FreeFireTarget.NotInstalled
+              }
+
+              fun launchFreeFireOrStore(context: Context): Boolean {
+                  return when (val target = detectFreeFire(context)) {
+                      is FreeFireTarget.Installed -> {
+                          val launchIntent = context.packageManager.getLaunchIntentForPackage(target.packageName)
+                          if (launchIntent != null) {
+                              launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                              context.startActivity(launchIntent)
+                              true
+                          } else false
+                      }
+                      FreeFireTarget.NotInstalled -> {
+                          try {
+                              context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$PKG_FREE_FIRE")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                          } catch (_: Exception) {
+                              context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$PKG_FREE_FIRE")).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                          }
+                          false
+                      }
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > app/src/main/java/com/rezwon/gamebooster/MainActivity.kt
+          package com.rezwon.gamebooster
+
+          import android.animation.ObjectAnimator
+          import android.animation.ValueAnimator
+          import android.content.BroadcastReceiver
+          import android.content.Context
+          import android.content.Intent
+          import android.content.IntentFilter
+          import android.os.Bundle
+          import android.os.SystemClock
+          import android.view.Choreographer
+          import android.view.animation.LinearInterpolator
+          import android.widget.Toast
+          import androidx.activity.enableEdgeToEdge
+          import androidx.appcompat.app.AppCompatActivity
+          import androidx.core.content.ContextCompat
+          import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+          import androidx.core.view.ViewCompat
+          import androidx.core.view.WindowInsetsCompat
+          import androidx.lifecycle.Lifecycle
+          import androidx.lifecycle.lifecycleScope
+          import androidx.lifecycle.repeatOnLifecycle
+          import com.google.android.gms.ads.AdRequest
+          import com.google.android.gms.ads.AdSize
+          import com.google.android.gms.ads.AdView
+          import com.google.android.gms.ads.FullScreenContentCallback
+          import com.google.android.gms.ads.LoadAdError
+          import com.google.android.gms.ads.interstitial.InterstitialAd
+          import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
+          import com.rezwon.gamebooster.databinding.ActivityMainBinding
+          import kotlinx.coroutines.delay
+          import kotlinx.coroutines.launch
+          import java.util.Locale
+
+          class MainActivity : AppCompatActivity() {
+
+              private lateinit var binding: ActivityMainBinding
+              private var bannerAdView: AdView? = null
+              private var interstitialAd: InterstitialAd? = null
+              private var lastInterstitialShownMs: Long = 0L
+              private var isBoosting: Boolean = false
+              private var ringAnimator: ObjectAnimator? = null
+              private var pulseAnimator: ValueAnimator? = null
+              private var frameCount = 0
+              private var lastFpsTimestampNs = 0L
+              private var currentFps = 60
+
+              private val frameCallback = object : Choreographer.FrameCallback {
+                  override fun doFrame(frameTimeNanos: Long) {
+                      if (lastFpsTimestampNs == 0L) lastFpsTimestampNs = frameTimeNanos
+                      frameCount++
+                      val elapsedNs = frameTimeNanos - lastFpsTimestampNs
+                      if (elapsedNs >= 1_000_000_000L) {
+                          currentFps = ((frameCount * 1_000_000_000.0) / elapsedNs).toInt().coerceAtLeast(1)
+                          binding.tvFpsValue.text = "$currentFps FPS"
+                          frameCount = 0
+                          lastFpsTimestampNs = frameTimeNanos
+                      }
+                      Choreographer.getInstance().postFrameCallback(this)
+                  }
+              }
+
+              private val batteryReceiver = object : BroadcastReceiver() {
+                  override fun onReceive(context: Context?, intent: Intent?) {
+                      updateBatteryUi(SystemMonitor.parseBatteryIntent(intent))
+                  }
+              }
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  installSplashScreen()
+                  enableEdgeToEdge()
+                  super.onCreate(savedInstanceState)
+                  binding = ActivityMainBinding.inflate(layoutInflater)
+                  setContentView(binding.root)
+
+                  ViewCompat.setOnApplyWindowInsetsListener(binding.rootLayout) { v, insets ->
+                      val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                      v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
+                      insets
+                  }
+
+                  setupStaticDeviceHeader()
+                  setupReactorAnimations()
+                  setupControls()
+                  setupAds()
+                  startTelemetryLoop()
+              }
+
+              override fun onResume() {
+                  super.onResume()
+                  bannerAdView?.resume()
+                  val stickyBattery = registerReceiver(batteryReceiver, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+                  updateBatteryUi(SystemMonitor.parseBatteryIntent(stickyBattery))
+                  refreshFreeFireCard()
+                  frameCount = 0
+                  lastFpsTimestampNs = 0L
+                  Choreographer.getInstance().postFrameCallback(frameCallback)
+              }
+
+              override fun onPause() {
+                  bannerAdView?.pause()
+                  Choreographer.getInstance().removeFrameCallback(frameCallback)
+                  try { unregisterReceiver(batteryReceiver) } catch (_: IllegalArgumentException) { }
+                  super.onPause()
+              }
+
+              override fun onDestroy() {
+                  ringAnimator?.cancel()
+                  pulseAnimator?.cancel()
+                  bannerAdView?.destroy()
+                  super.onDestroy()
+              }
+
+              private fun setupStaticDeviceHeader() {
+                  val cpu = SystemMonitor.getCpuSnapshot(this)
+                  binding.tvDeviceHeader.text = "${cpu.deviceLabel} • ${cpu.maxRefreshHz}Hz Display"
+                  OptimizationEngine.applyHighRefreshRate(this, true)
+              }
+
+              private fun setupReactorAnimations() {
+                  ringAnimator = ObjectAnimator.ofFloat(binding.ringOuter, "rotation", 0f, 360f).apply {
+                      duration = 9000L
+                      repeatCount = ValueAnimator.INFINITE
+                      interpolator = LinearInterpolator()
+                      start()
+                  }
+                  pulseAnimator = ValueAnimator.ofFloat(0.97f, 1.03f).apply {
+                      duration = 1600L
+                      repeatMode = ValueAnimator.REVERSE
+                      repeatCount = ValueAnimator.INFINITE
+                      addUpdateListener { anim ->
+                          val scale = anim.animatedValue as Float
+                          binding.btnBoost.scaleX = scale
+                          binding.btnBoost.scaleY = scale
+                      }
+                      start()
+                  }
+              }
+
+              private fun setupControls() {
+                  binding.btnBoost.setOnClickListener {
+                      if (!isBoosting) triggerOneTapBoost()
+                  }
+                  binding.switchGamingMode.setOnCheckedChangeListener { buttonView, isChecked ->
+                      OptimizationEngine.applyKeepScreenOn(this, isChecked)
+                      when (OptimizationEngine.setGamingDnd(this, isChecked)) {
+                          DndStatus.ENABLED -> Toast.makeText(this, "Gaming Mode & Focus Shield ON", Toast.LENGTH_SHORT).show()
+                          DndStatus.DISABLED -> Toast.makeText(this, "Gaming Mode OFF", Toast.LENGTH_SHORT).show()
+                          DndStatus.NEEDS_PERMISSION -> {
+                              if (isChecked) {
+                                  Toast.makeText(this, "Grant Do Not Disturb access to silence alerts while gaming", Toast.LENGTH_LONG).show()
+                                  OptimizationEngine.openDndSettings(this)
+                              }
+                              buttonView.isChecked = false
+                          }
+                      }
+                  }
+                  binding.switch120Hz.setOnCheckedChangeListener { _, isChecked ->
+                      OptimizationEngine.applyHighRefreshRate(this, isChecked)
+                  }
+                  binding.switchBrightness.setOnCheckedChangeListener { _, isChecked ->
+                      OptimizationEngine.applyHighBrightness(this, isChecked)
+                  }
+                  binding.cardFreeFireLaunch.setOnClickListener {
+                      lifecycleScope.launch {
+                          binding.tvBoostStatus.text = "Preparing Gaming Mode for Free Fire..."
+                          OptimizationEngine.applyHighRefreshRate(this@MainActivity, binding.switch120Hz.isChecked)
+                          OptimizationEngine.runSafeOptimization(this@MainActivity)
+                          val launched = OptimizationEngine.launchFreeFireOrStore(this@MainActivity)
+                          if (!launched) Toast.makeText(this@MainActivity, "Free Fire not found — opening Play Store", Toast.LENGTH_SHORT).show()
+                      }
+                  }
+              }
+
+              private fun triggerOneTapBoost() {
+                  isBoosting = true
+                  binding.tvBoostButton.text = "OPTIMIZING"
+                  binding.tvBoostStatus.text = "Trimming app cache & aligning gaming profile..."
+                  ringAnimator?.duration = 1400L
+
+                  lifecycleScope.launch {
+                      val report = OptimizationEngine.runSafeOptimization(this@MainActivity)
+                      binding.tvBoostButton.text = "BOOSTED"
+                      binding.tvBoostStatus.text = report.summary
+                      ringAnimator?.duration = 9000L
+                      updateRamAndStorageUi()
+                      isBoosting = false
+                      maybeShowInterstitialAfterBoost()
+                      delay(3500)
+                      if (!isBoosting) binding.tvBoostButton.text = "ONE-TAP\nBOOST"
+                  }
+              }
+
+              private fun startTelemetryLoop() {
+                  lifecycleScope.launch {
+                      repeatOnLifecycle(Lifecycle.State.STARTED) {
+                          while (true) {
+                              updateRamAndStorageUi()
+                              updateCpuUi()
+                              updateNetworkUi()
+                              delay(2500L)
+                          }
+                      }
+                  }
+              }
+
+              private fun updateRamAndStorageUi() {
+                  val mem = SystemMonitor.getMemorySnapshot(this)
+                  binding.tvRamPercent.text = "${mem.usedPercent}%"
+                  binding.progressRam.progress = mem.usedPercent
+                  binding.tvRamDetail.text = String.format(Locale.US, "%.1f / %.1f GB (%.1f GB free)", mem.usedGb, mem.totalGb, mem.availGb)
+
+                  val storage = SystemMonitor.getStorageSnapshot()
+                  binding.tvStorageFree.text = String.format(Locale.US, "%.1f GB Free", storage.freeGb)
+                  binding.progressStorage.progress = storage.usedPercent
+                  binding.tvStorageDetail.text = String.format(Locale.US, "%.0f / %.0f GB used", storage.usedGb, storage.totalGb)
+              }
+
+              private fun updateCpuUi() {
+                  val cpu = SystemMonitor.getCpuSnapshot(this)
+                  binding.tvCpuCores.text = "${cpu.cores} Cores • ${cpu.maxRefreshHz}Hz"
+                  binding.tvCpuFreq.text = if (cpu.currentFreqMhz != null && cpu.maxFreqMhz != null) {
+                      "Clock: ${cpu.currentFreqMhz} / ${cpu.maxFreqMhz} MHz"
+                  } else {
+                      "Clock: Managed by Android OS"
+                  }
+              }
+
+              private fun updateBatteryUi(battery: BatterySnapshot) {
+                  binding.tvBatteryTemp.text = if (battery.tempCelsius != null) String.format(Locale.US, "%.1f °C", battery.tempCelsius) else "N/A"
+                  val tempColor = when (battery.thermalStatus) {
+                      "HOT" -> ContextCompat.getColor(this, R.color.red_hot)
+                      "WARM" -> ContextCompat.getColor(this, R.color.amber_warn)
+                      else -> ContextCompat.getColor(this, R.color.neon_green)
+                  }
+                  binding.tvBatteryTemp.setTextColor(tempColor)
+                  val chargeState = if (battery.isCharging) "Charging" else "Discharging"
+                  binding.tvBatteryDetail.text = "Level: ${battery.levelPercent}% • $chargeState (${battery.thermalStatus})"
+              }
+
+              private suspend fun updateNetworkUi() {
+                  val net = SystemMonitor.getNetworkSnapshot(this)
+                  if (!net.isConnected) {
+                      binding.tvNetworkStatus.text = "Offline"
+                      binding.tvNetworkDetail.text = "No active internet connection"
+                      binding.tvPingBadge.text = "-- ms"
+                      binding.tvPingBadge.setTextColor(ContextCompat.getColor(this, R.color.red_hot))
+                      return
+                  }
+                  binding.tvNetworkStatus.text = net.transportLabel
+                  binding.tvNetworkDetail.text = String.format(Locale.US, "Est. Link: %.1f Mbps", net.downMbps)
+                  if (net.pingMs != null) {
+                      binding.tvPingBadge.text = "${net.pingMs} ms"
+                      val pingColor = when {
+                          net.pingMs <= 70 -> ContextCompat.getColor(this, R.color.neon_green)
+                          net.pingMs <= 140 -> ContextCompat.getColor(this, R.color.amber_warn)
+                          else -> ContextCompat.getColor(this, R.color.red_hot)
+                      }
+                      binding.tvPingBadge.setTextColor(pingColor)
+                  } else {
+                      binding.tvPingBadge.text = "Timeout"
+                      binding.tvPingBadge.setTextColor(ContextCompat.getColor(this, R.color.amber_warn))
+                  }
+              }
+
+              private fun refreshFreeFireCard() {
+                  when (val target = OptimizationEngine.detectFreeFire(this)) {
+                      is FreeFireTarget.Installed -> binding.tvFreeFireStatus.text = "${target.label} detected • Tap to boost & play"
+                      FreeFireTarget.NotInstalled -> binding.tvFreeFireStatus.text = "Not installed • Tap to view on Play Store"
+                  }
+              }
+
+              private fun setupAds() {
+                  binding.adBannerContainer.post {
+                      val density = resources.displayMetrics.density
+                      val widthDp = (binding.adBannerContainer.width / density).toInt().coerceAtLeast(320)
+                      val adaptiveSize = AdSize.getLargeAnchoredAdaptiveBannerAdSize(this, widthDp)
+                      val adView = AdView(this).apply {
+                          adUnitId = getString(R.string.admob_banner_id)
+                          setAdSize(adaptiveSize)
+                      }
+                      binding.adBannerContainer.removeAllViews()
+                      binding.adBannerContainer.addView(adView)
+                      adView.loadAd(AdRequest.Builder().build())
+                      bannerAdView = adView
+                  }
+                  loadInterstitialAd()
+              }
+
+              private fun loadInterstitialAd() {
+                  InterstitialAd.load(
+                      this,
+                      getString(R.string.admob_interstitial_id),
+                      AdRequest.Builder().build(),
+                      object : InterstitialAdLoadCallback() {
+                          override fun onAdLoaded(ad: InterstitialAd) {
+                              interstitialAd = ad
+                              interstitialAd?.fullScreenContentCallback = object : FullScreenContentCallback() {
+                                  override fun onAdDismissedFullScreenContent() {
+                                      interstitialAd = null
+                                      loadInterstitialAd()
+                                  }
+                              }
+                          }
+                          override fun onAdFailedToLoad(error: LoadAdError) { interstitialAd = null }
+                      }
+                  )
+              }
+
+              private fun maybeShowInterstitialAfterBoost() {
+                  val now = SystemClock.elapsedRealtime()
+                  if (interstitialAd != null && (now - lastInterstitialShownMs) >= 180_000L) {
+                      lastInterstitialShownMs = now
+                      interstitialAd?.show(this)
+                  }
+              }
+          }
+          EOF
+
+      - name: Build Debug APK
+        run: gradle assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: REZWON-GAME-BOOSTER-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
